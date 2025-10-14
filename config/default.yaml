@@ -1,0 +1,39 @@
+# config/default.yaml
+
+generator:
+  K: 3
+  N_items: 40
+  include_cost_in_copula: true      # correlate cost with objectives
+  sigma:                            # correlation over [cost, obj1, obj2, obj3]
+    [1.00, 0.25, -0.10, 0.30]
+    [0.25, 1.00, 0.40, -0.20]
+    [-0.10, 0.40, 1.00, 0.10]
+    [0.30, -0.20, 0.10, 1.00]
+  
+  marginals:
+    cost: {dist: gamma, shape: 2.0, scale: 2.0}   # distribution *scale (0), in cost units
+    objectives:
+      {name: Finance, dist: gamma, shape: 2.0, scale: 2.0}
+      {name: Pollution, dist: gamma, shape: 2.0, scale: 2.0}
+      {name: Happiness, dist: gamma, shape: 2.0, scale: 2.0}
+
+  value_clip:                       # optional safety bounds (pre-integerization)
+    cost: [0.0, 10.0]
+    objectives:
+      [0.0, 10.0]
+      [0.0, 8.0]
+      [0.0, 12.0]
+
+  int_scale: 10                     # integerization factor for ILP
+  seed: 12345
+  catalog_name: "catalog_0001"
+
+episode:
+  target_picks: 10
+  budget_multiplier: 1.0
+  beta: 0.4
+  max_steps: 20
+  solver_time_limit_ms: 50
+  cache_size: 2048
+  budget_bucket: 500              # for cache key bucketing
+  num_frontier_weights: 40
