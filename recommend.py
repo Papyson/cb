@@ -32,9 +32,9 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
-from state import Advisors
-from utils.ilp import solve_knapsack_single_objective
-from utils.rng import hash_uint64
+from .state import Advisors
+from .utils.ilp import solve_knapsack_single_objective
+from .utils.rng import hash_uint64
 
 # ------------------------------
 # Small LRU cache
@@ -157,7 +157,7 @@ class RecommendationManager:
         Advisors, RecommendationStats
         """
 
-        if remaining_ids == 0 or budget_rem_int <= 0:
+        if remaining_ids.size == 0 or budget_rem_int <= 0:
             # Trivial: no recommendations possible
             empty = Advisors.empty(self.K)
             return empty, RecommendationStats(cache_hit=False, total_wall_ms=0.0, per_objective_status=[])

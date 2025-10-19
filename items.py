@@ -21,8 +21,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 from scipy import stats
 
-from utils.rng import DeterministicRNG
-from state import Catalog, Item, EpisodeConfig
+from .utils.rng import DeterministicRNG
+from .state import Catalog, Item, EpisodeConfig
 
 
 # -----------------------------

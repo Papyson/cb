@@ -130,7 +130,7 @@ def solve_knapsack_single_objective(
     # ----------- Solver Params -----------------------
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = max(0.001, time_limit_ms / 1000.0)
-    solver.parameters.random_seed = int(seed)
+    solver.parameters.random_seed = int(seed % (2**31 - 1))
     solver.parameters.num_search_workers = 1            # determinism
     solver.parameters.log_search_progress = False
 

@@ -26,8 +26,8 @@ from typing import List, Tuple
 
 import numpy as np
 
-from utils.ilp import solve_knapsack_single_objective
-from utils.rng import DeterministicRNG, hash_uint64
+from .utils.ilp import solve_knapsack_single_objective
+from .utils.rng import DeterministicRNG, hash_uint64
 
 
 @dataclass(frozen=True)

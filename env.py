@@ -33,14 +33,14 @@ from typing import Dict, Tuple
 
 import numpy as np
 
-from state import Catalog, EpisodeConfig, EpisodeState, Advisors
-from items import GeneratorConfig, generate_catalog
-from recommend import RecommendationManager
-from score import ScoreManager
-from reward import RewardManager
-import selection as sel
-from utils.rng import DeterministicRNG, hash_uint64
-from pareto import compute_pareto_frontier_and_distance
+from .state import Catalog, EpisodeConfig, EpisodeState, Advisors
+from .items import GeneratorConfig, generate_catalog
+from .recommend import RecommendationManager
+from .score import ScoreManager
+from .reward import RewardManager
+from . import selection as sel
+from .utils.rng import DeterministicRNG, hash_uint64
+from .pareto import compute_pareto_frontier_and_distance
 
 @dataclass
 class StepResult:
@@ -226,7 +226,7 @@ class CityBuilderEnv:
                 costs_int=self.costs_int,
                 budget_int=int(self._initial_budget_int or 0),
                 agent_scores_int=self.state.scores_cum_int,
-                K=self.ecfg,
+                K=self.ecfg.K,
                 num_weights=self.ecfg.num_frontier_weights,
                 time_limit_ms=self.ecfg.solver_time_limit_ms,
                 base_seed=pareto_seed,

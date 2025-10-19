@@ -23,7 +23,7 @@ from typing import Optional, Tuple
 import numpy as np
 
 from .env import CityBuilderEnv, StepResult
-from .items import GeneratorConfig
+from .items import GeneratorConfig, MarginalSpec
 from .state import EpisodeConfig, Catalog, EpisodeState, Advisors
 from .pareto import compute_pareto_frontier_and_distance
 
@@ -93,11 +93,38 @@ def _configs_from_yaml(cfg: dict) -> Tuple[GeneratorConfig, EpisodeConfig]:
     Expect the YAML to have top-level sections 'generator' and 'episode'
     whose keys match the dataclasses for GeneratorConfig and EpisodeConfig
     """
+    gen_config_dict = cfg.get("generator", {})
+    epi_config_dict = cfg.get("episode", {})
 
-    gen = cfg.get("generator", {})
-    epi = cfg.get("episode", {})
-    gcfg = GeneratorConfig(**gen)
-    ecfg = EpisodeConfig(**epi)
+    if 'marginals' in gen_config_dict:
+        marginals_data = gen_config_dict.pop('marginals')
+        if 'cost' in marginals_data:
+            gen_config_dict['cost_marginal'] = marginals_data['cost']
+        if 'objectives' in marginals_data:
+            gen_config_dict['objective_marginals'] = marginals_data['objectives']
+
+    if 'cost_marginal' in gen_config_dict:
+        cost_dict = gen_config_dict['cost_marginal']
+        gen_config_dict['cost_marginal'] = MarginalSpec(**cost_dict)
+
+    if 'objective_marginals' in gen_config_dict:
+        obj_list_of_dicts = gen_config_dict['objective_marginals']
+        spec_keys = ['dist', 'shape', 'scale']
+        gen_config_dict['objective_marginals'] = [
+            MarginalSpec(**{k: d.get(k) for k in spec_keys if k in d})
+            for d in obj_list_of_dicts
+        ]
+
+    if 'sigma' in gen_config_dict:
+        gen_config_dict['sigma'] = np.array(gen_config_dict['sigma'])
+    
+    gen_config_dict.pop('seed', None)
+
+    if 'int_scale' not in epi_config_dict and 'int_scale' in gen_config_dict:
+        epi_config_dict['int_scale'] = gen_config_dict['int_scale']
+        
+    gcfg = GeneratorConfig(**gen_config_dict)
+    ecfg = EpisodeConfig(**epi_config_dict)
     return gcfg, ecfg
 
 def make_env(
@@ -119,11 +146,18 @@ def make_env(
     >>> obs, mask, info = env.reset()
     """
 
+    # __init__.py (New Code)
+
+    package_dir = Path(__file__).parent
+
     # Resolving config file
     candidates = []
     if cfg_path:
         candidates.append(Path(cfg_path))
-    candidates.append(Path("./config/default.yaml"))
+
+    default_config_path = package_dir / "config" / "default.yaml"
+    candidates.append(default_config_path)
+
     cfg_file = next((p for p in candidates if p.exists()), None)
     if cfg_file is None:
         raise FileNotFoundError(

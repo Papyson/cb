@@ -47,7 +47,7 @@ def _to_builtin(obj: Any) -> Any:
         obj = asdict(obj)
     if isinstance(obj, np.generic):
         return obj.item()
-    if isinstance(obj, np.ndarry):
+    if isinstance(obj, np.ndarray):
         # Keep arrays as plain Python lists for JSON; CSV will stringify
         return obj.tolist()
     if isinstance(obj, (list, tuple)):

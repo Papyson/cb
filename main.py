@@ -23,7 +23,7 @@ from typing import List
 
 import numpy as np
 
-import citybuilder_env as cbe 
+import citybuilder_env as cbe
 
 # --------- Simple demo policies -------------
 
@@ -52,7 +52,7 @@ def policy_random(_: dict, mask: np.ndarray) -> int:
 
 def run(args: argparse.Namespace) -> int:
     env = cbe.make_env(seed=args.seed, cfg_path=args.cfg_path, cfg_fingerprint=args.cfg_fp)
-    run_dir =- cbe.make_run_dir(args.logdir, prefix="citybuilder")
+    run_dir = cbe.make_run_dir(args.logdir, prefix="citybuilder")
     logger = cbe.EpisodeLogger(run_dir)
 
     rng = np.random.default_rng(args.seed)

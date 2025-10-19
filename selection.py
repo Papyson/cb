@@ -16,7 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 
-from state import EpisodeState
+from .state import EpisodeState
 
 def build_action_mask(state: EpisodeState, costs_int: np.ndarray) -> np.ndarray:
     """
