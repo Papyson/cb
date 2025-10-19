@@ -3,37 +3,41 @@
 generator:
   K: 3
   N_items: 40
-  include_cost_in_copula: true      # correlate cost with objectives
-  sigma:                            # correlation over [cost, obj1, obj2, obj3]
-    [1.00, 0.25, -0.10, 0.30]
-    [0.25, 1.00, 0.40, -0.20]
-    [-0.10, 0.40, 1.00, 0.10]
-    [0.30, -0.20, 0.10, 1.00]
-  
-  marginals:
-    cost: {dist: gamma, shape: 2.0, scale: 2.0}   # distribution *scale (0), in cost units
-    objectives:
-      {name: Finance, dist: gamma, shape: 2.0, scale: 2.0}
-      {name: Pollution, dist: gamma, shape: 2.0, scale: 2.0}
-      {name: Happiness, dist: gamma, shape: 2.0, scale: 2.0}
+  include_cost_in_copula: true
 
-  value_clip:                       # optional safety bounds (pre-integerization)
+  # Correlation over [cost, obj1, obj2, obj3]; 4x4, symmetric, PSD
+  sigma:
+    - [1.00,  0.25, -0.10,  0.30]
+    - [0.25,  1.00,  0.40, -0.20]
+    - [-0.10, 0.40,  1.00,  0.10]
+    - [0.30, -0.20,  0.10,  1.00]
+
+  marginals:
+    cost: { dist: gamma, shape: 2.0, scale: 2.0 }
+    objectives:
+      - { name: Finance,   dist: gamma, shape: 2.0, scale: 2.0 }
+      - { name: Pollution, dist: gamma, shape: 2.0, scale: 2.0 }
+      - { name: Happiness, dist: gamma, shape: 2.0, scale: 2.0 }
+
+  # Optional pre-integerization clipping (safety)
+  value_clip:
     cost: [0.0, 10.0]
     objectives:
-      [0.0, 10.0]
-      [0.0, 8.0]
-      [0.0, 12.0]
+      - [0.0, 10.0]
+      - [0.0,  8.0]
+      - [0.0, 12.0]
 
-  int_scale: 10                     # integerization factor for ILP
+  int_scale: 10
   seed: 12345
   catalog_name: "catalog_0001"
 
 episode:
+  K: 3                 # MUST match generator.K (used throughout env)
   target_picks: 10
   budget_multiplier: 1.0
   beta: 0.4
   max_steps: 20
   solver_time_limit_ms: 50
   cache_size: 2048
-  budget_bucket: 500              # for cache key bucketing
+  budget_bucket: 1     # exact matching recommended
   num_frontier_weights: 40
