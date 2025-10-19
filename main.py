@@ -107,7 +107,7 @@ def run(args: argparse.Namespace) -> int:
     return 0
 
 def parse_args(argv: List[str]) -> argparse.Namespace:
-    p = argparse.ArguementParser(description="CityBuilderEnv demo runner")
+    p = argparse.ArgumentParser(description="CityBuilderEnv demo runner")
     p.add_argument("--episodes", type=int, default=3, help="NUmber of episodes to run")
     p.add_argument("--seed", type=int, default=1234, help="Master seed")
     p.add_argument("--cfg-fp", dest="cfg_fp", type=str, default="v1", help="Config fingerprint tag")

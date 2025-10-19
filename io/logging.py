@@ -124,7 +124,7 @@ class EpisodeLogger:
         # Make values JSON-Safe
         self._episode_meta = _to_builtin(meta)
 
-    def end_epidose(self, summary: Dict[str, Any]) -> None:
+    def end_episode(self, summary: Dict[str, Any]) -> None:
         """
         Append one JSON object (already conatins Pareto fields if env.summary() does).
         """

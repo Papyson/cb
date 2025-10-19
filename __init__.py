@@ -64,7 +64,7 @@ __all__ = [
     "hash_uint64",
 
     # I0 helpers
-    "EpisodeLoggers",
+    "EpisodeLogger",
     "make_run_dir",
     "ReplayTrace",
     "save_replay",

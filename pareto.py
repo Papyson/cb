@@ -90,7 +90,7 @@ def compute_pareto_frontier_and_distance(
         # integer-valued objective coefficients per item: round(weighted sum)
         # (λ ≥ 0, obj_int ≥ 0) ⇒ values ≥ 0
         values_float = objs_int.astype(np.float64) @ w # (N,)
-        values_int = np.rint(values_float).aastype(np.int64)
+        values_int = np.rint(values_float).astype(np.int64)
         seed = int(hash_uint64(base_seed, "w", w_idx))
         res = solve_knapsack_single_objective(
             values=values_int,

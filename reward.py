@@ -138,7 +138,7 @@ class RewardManager:
             max_vec_for_details = tuple(int(x) for x in ref_max.tolist())
 
         # 2. Advisor frequency φ(i)
-        phi = int(advisors.frq.get(int(selected_id), 0))
+        phi = int(advisors.freq.get(int(selected_id), 0))
         # 3. Reward
         base = float(np.sum(norm, dtype=np.float64))
         shaped = base + self.beta * float(phi)
