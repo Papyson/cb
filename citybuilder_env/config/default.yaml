@@ -1,0 +1,46 @@
+# config/default.yaml
+
+# config/default.yaml  (Preset S ~100 budget)
+
+generator:
+  K: 3
+  N_items: 56
+  include_cost_in_copula: true
+
+  # Correlation over [cost, obj1, obj2, obj3]
+  sigma:
+    - [ 1.00,  0.30, -0.15,  0.25 ]
+    - [ 0.30,  1.00,  0.40, -0.20 ]
+    - [ -0.15, 0.40,  1.00,  0.10 ]
+    - [ 0.25, -0.20,  0.10,  1.00 ]
+
+  marginals:
+    cost: { dist: gamma, shape: 2.0, scale: 2.5 }      # mean ≈ 5.0
+    objectives:
+      - { name: Finance,   dist: gamma, shape: 2.0, scale: 3.0 }  # mean ≈ 6
+      - { name: Pollution, dist: gamma, shape: 2.0, scale: 2.5 }  # mean ≈ 5
+      - { name: Happiness, dist: gamma, shape: 2.0, scale: 3.5 }  # mean ≈ 7
+
+  # Safety clips (pre-integerization) – keep headroom, avoid heavy truncation
+  value_clip:
+    cost: [0.0, 20.0]
+    objectives:
+      - [0.0, 18.0]
+      - [0.0, 16.0]
+      - [0.0, 20.0]
+
+  int_scale: 2                                   # << keeps budget ~100
+  seed: 12345
+  catalog_name: "catalog_template"
+
+episode:
+  K: 3
+  target_picks: 10
+  budget_multiplier: 1.05
+  beta: 0.3
+  max_steps: 10
+  solver_time_limit_ms: 100
+  cache_size: 4096
+  budget_bucket: 1
+  num_frontier_weights: 100
+

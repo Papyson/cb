@@ -32,9 +32,9 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
-from .state import Advisors
-from .utils.ilp import solve_knapsack_single_objective
-from .utils.rng import hash_uint64
+from citybuilder_env.state import Advisors
+from citybuilder_env.utils.ilp import solve_knapsack_single_objective
+from citybuilder_env.utils.rng import hash_uint64
 
 # ------------------------------
 # Small LRU cache

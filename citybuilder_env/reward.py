@@ -26,8 +26,8 @@ from typing import Dict, Literal, Tuple
 
 import numpy as np
 
-from .state import Advisors
-from .utils.normalization import remaining_max, normalize_item_by_max, EMAMaxTracker
+from citybuilder_env.state import Advisors
+from citybuilder_env.utils.normalization import remaining_max, normalize_item_by_max, EMAMaxTracker
 
 @dataclass(frozen=True)
 class RewardDetails:

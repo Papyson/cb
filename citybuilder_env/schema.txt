@@ -12,19 +12,9 @@ citybuilder_rl/
     rng.py
     ilp.py
     normalization.py
-    dominance.py
-    checks.py
-    ids.py
   io/
     logging.py
     replay.py
   config/
     default.yaml
-  cli/
-    main.py
-  tests/
-    test_items.py
-    test_recommend.py
-    test_reward.py
-    test_pareto.py
-    test_env_loop.py
+ 

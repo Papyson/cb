@@ -21,8 +21,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 from scipy import stats
 
-from .utils.rng import DeterministicRNG
-from .state import Catalog, Item, EpisodeConfig
+from citybuilder_env.utils.rng import DeterministicRNG
+from citybuilder_env.state import Catalog, Item, EpisodeConfig
 
 
 # -----------------------------

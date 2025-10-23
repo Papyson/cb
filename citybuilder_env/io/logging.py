@@ -157,16 +157,16 @@ class EpisodeLogger:
             # only write header if new file
             if self._steps_path.stat().st_size == 0:
                 self._csv_writer.writeheader()
-            else:
-                # Conform to fixed header; add missing keys to merged with empty strings
-                for k in self._header:
-                    if k not in merged:
-                        merged[k] = ""
+        else:
+            # Conform to fixed header; add missing keys to merged with empty strings
+            for k in self._header:
+                if k not in merged:
+                    merged[k] = ""
 
-            # Convert all remaining values to builtins
-            merged = _to_builtin(merged)
-            self._csv_writer.writerow(merged)
-            self._steps_fh.flush()
+        # Convert all remaining values to builtins
+        merged = _to_builtin(merged)
+        self._csv_writer.writerow(merged)
+        self._steps_fh.flush()
 
     # ------ Utilities ---------
 

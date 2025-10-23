@@ -18,7 +18,7 @@ from typing import Dict, List
 
 import numpy as np
 
-from .state import EpisodeState
+from citybuilder_env.state import EpisodeState
 
 @dataclass(frozen=True)
 class StepRecord:
