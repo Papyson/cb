@@ -35,12 +35,22 @@ generator:
 
 episode:
   K: 3
-  target_picks: 10
-  budget_multiplier: 1.05
-  beta: 0.3
+  target_picks: 10              # metadata; not enforced by the catalog
+  budget_multiplier: 1.05       # (legacy path only; see §3)
+  int_scale: 1000               # used for integerization (must match catalog.int_scale)
   max_steps: 10
   solver_time_limit_ms: 100
   cache_size: 4096
   budget_bucket: 1
   num_frontier_weights: 100
+
+  # New coverage controls
+  category_bins:
+    - [tight, [0.25, 0.40]]
+    - [mid,   [0.40, 0.60]]
+    - [loose, [0.60, 0.80]]
+  use_antithetic_in_bin: true
+  stratify_tau: true
+  tau_strata: 32
+  tau_edge_eps: 0.001
 

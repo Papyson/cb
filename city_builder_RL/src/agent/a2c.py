@@ -12,11 +12,18 @@ class A2CAgent:
         self.cfg = cfg
         self.model = model.to(cfg.DEVICE)
         self.feat = feat
-        self.opt = torch.optim.Adam(self.model.parameters(), lr=cfg.LR)
+        # Best-practice Adam params from cfg
+        self.opt = torch.optim.Adam(
+            self.model.parameters(),
+            lr=cfg.LR,
+            betas=cfg.ADAM_BETAS,
+            eps=cfg.ADAM_EPS,
+            weight_decay=cfg.WEIGHT_DECAY,
+        )
 
     def _build_tensors(self, obs: dict):
-        s = self.feat.state_features(obs)               # [S]
-        X, ids, mask = self.feat.item_features(obs)     # [M,X], list, [M]
+        s = self.feat.state_features(obs)
+        X, ids, mask = self.feat.item_features(obs)
         return s.to(self.cfg.DEVICE), X.to(self.cfg.DEVICE), mask.to(self.cfg.DEVICE), ids
 
     def act(self, obs: dict) -> Dict[str, Any]:
@@ -58,9 +65,9 @@ class A2CAgent:
         return loss, policy_loss.detach().item(), value_loss.detach().item(), advantage.detach().item()
 
     def update(self, total_loss: torch.Tensor):
-        self.opt.zero_grad()
+        self.opt.zero_grad(set_to_none=True)
         total_loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.cfg.GRAD_CLIP)
         self.opt.step()
 
     def adjust_temperature_from_pareto(self, tau: float, pareto_distance: float) -> float:

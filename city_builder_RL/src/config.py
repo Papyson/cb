@@ -6,14 +6,19 @@ from typing import Optional, Tuple
 @dataclass
 class Config:
     # ---------------- Core training ----------------
-    NUM_EPISODES: int = 2
-    EVAL_EPISODES: int = 2
-    MAX_STEPS_PER_EPISODE: int = 15
+    NUM_EPISODES: int = 5
+    EVAL_EPISODES: int = 5
+    MAX_STEPS_PER_EPISODE: int = 10
 
     GAMMA: float = 1.0
     LR: float = 3e-4
     ENTROPY_BONUS: float = 1e-3
     VALUE_COEF: float = 0.5
+
+    ADAM_BETAS: tuple[float, float] = (0.9, 0.999)
+    ADAM_EPS: float = 1e-8
+    WEIGHT_DECAY: float = 0.0
+    GRAD_CLIP: float = 0.5  # or 1.0; 0.5 is a good start
 
     # ---------------- Exploration temperature ----------------
     USE_TEMPERATURE: bool = True
@@ -23,28 +28,28 @@ class Config:
     KAPPA_PARETO: float = 0.5  # scaling for end-of-episode pareto_distance
 
     # ---------------- Features ----------------
-    EPS: float = 1e-9                  # numerical eps for feature norms
-    MAX_ITEMS_HINT_FLOOR: int = 64     # fallback when remaining is empty at t0
+    USE_ADVISORS: bool = True             # <--- NEW: gate advisor-derived features
+    EPS: float = 1e-9
+    MAX_ITEMS_HINT_FLOOR: int = 64
 
     # ---------------- Device / Seeding ----------------
-    DEVICE: str = "cpu"                # "cpu" or "cuda"
+    DEVICE: str = "cpu"
     SEED: int = 12345
 
     # ---------------- Checkpointing ----------------
     CKPT_DIR: str = "./checkpoints"
     CKPT_NAME: str = "actor_critic_citybuilder.pt"
-    LOAD: bool = False                 # load checkpoint if exists
+    LOAD: bool = False
 
     # ---------------- Local env (no API) ----------------
-    ENV_CFG_PATH: Optional[str] = None       # path to YAML; None -> use package default
+    ENV_CFG_PATH: Optional[str] = None
     CFG_FINGERPRINT: str = "v1"
-    PARETO_WINDOW: int = 256                 # if you later want rolling stats in client
+    PARETO_WINDOW: int = 256
 
 
 def parse_args_to_config() -> Tuple[Config, str]:
     """
     Parse CLI, return (cfg, mode) where mode in {"train", "eval"}.
-    This replaces parsing in main.py to avoid duplication.
     """
     import argparse
     p = argparse.ArgumentParser(description="City Builder RL (local, no REST)")
@@ -73,6 +78,13 @@ def parse_args_to_config() -> Tuple[Config, str]:
         # feature controls
         sp.add_argument("--eps", type=float, default=Config.EPS)
         sp.add_argument("--items-hint-floor", type=int, default=Config.MAX_ITEMS_HINT_FLOOR)
+        # NEW: advisor feature gating
+        adv = sp.add_mutually_exclusive_group()
+        adv.add_argument("--use-advisors", dest="use_advisors", action="store_true",
+                         help="Enable advisor-derived features")
+        adv.add_argument("--no-advisors", dest="use_advisors", action="store_false",
+                         help="Disable advisor-derived features")
+        sp.set_defaults(use_advisors=Config.USE_ADVISORS)
 
     sp_train = sub.add_parser("train")
     add_shared(sp_train)
@@ -105,6 +117,7 @@ def parse_args_to_config() -> Tuple[Config, str]:
         KAPPA_PARETO=float(args.kappa_pareto),
         EPS=float(args.eps),
         MAX_ITEMS_HINT_FLOOR=int(args.items_hint_floor),
+        USE_ADVISORS=bool(args.use_advisors),      # <--- NEW
     )
 
     if mode == "train":

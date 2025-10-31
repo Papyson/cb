@@ -26,3 +26,9 @@ python -m city_RL.src.main train --seed 123 --episodes 500 --cfg ./citybuilder_e
 
 # Evaluate only (20 episodes by default)
 python -m city_builder_RL.src.main eval --seed 123
+
+# With advisor-derived features (default):
+python -m city_builder_RL.src.main train --seed 123 --use-advisors
+
+# Without advisor-derived features:
+python -m city_builder_RL.src.main train --seed 123 --no-advisors

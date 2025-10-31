@@ -168,60 +168,118 @@ class EpisodeConfig:
     """
     Frozen configuration for one class of episodes.
 
-    Fields
-    --------
-    K: number of objectives.
-    target_picks: target number of selections in an episode(soft cap)
-    budget_multiplier: scales expected total cost to derive the episode budget.
-    int_scale: intergerization factor (must match catalog).
-    beta: advisor-frequency shaping coefficient in reward.
-    max_steps: hard on steps (safety).
-    solver_time_limits_ms: per-solve time limit for CP-SAT (advisors, frontier).
-    cache_size: max LRU entries for advisor caching. 
-    budget_bucket: integer bucketing for advisor cache key on budget.
-    num_frontier_weights: number of weight vectors to scan for Pareto frontier.
+    Core
+    ----
+    K: number of objectives (maximize).
+    target_picks: target number of selections (metadata for agents; not enforced by catalog).
+    budget_multiplier: legacy path to scale expected per-item cost (see derive_budget_int()).
+    int_scale: integerization factor; MUST match catalog.int_scale.
+    max_steps: hard cap on episode length.
+    solver_time_limit_ms: per-solver wallclock limit (advisors/frontier).
+    cache_size: LRU size for advisor cache.
+    budget_bucket: integer bucketing for advisor cache keys on budget.
+    num_frontier_weights: number of weight vectors for Pareto frontier scans.
+
+    Coverage controls (new)
+    -----------------------
+    category_bins: list of (name, (lo, hi)) τ-intervals; must be inside (0,1) and non-overlapping.
+                   Default: [("tight",(0.25,0.40)), ("mid",(0.40,0.60)), ("loose",(0.60,0.80))]
+    use_antithetic_in_bin: if True, pair +z / -z within each capacity bin (3×2 categories).
+    stratify_tau: if True, use even strata within each bin for uniform τ coverage as episodes accrue.
+    tau_strata: number of strata per bin (e.g., 32).
+    tau_edge_eps: small epsilon to avoid exact bin edges.
+
+    Budgeting mode
+    --------------
+    use_expected_budget: if True, env may call derive_budget_int() (legacy). Otherwise capacity is
+                         computed from realized mass: W = τ * sum_i w_i (recommended).
     """
+
+    # Core
     K: int
     target_picks: int
     budget_multiplier: float
     int_scale: int
-    beta: float
     max_steps: int
     solver_time_limit_ms: int
     cache_size: int
     budget_bucket: int
     num_frontier_weights: int
 
-    def __post_int__(self):
+    # Coverage controls
+    category_bins: List[Tuple[str, Tuple[float, float]]]
+    use_antithetic_in_bin: bool
+    stratify_tau: bool
+    tau_strata: int
+    tau_edge_eps: float
+
+    # Budgeting mode
+    use_expected_budget: bool = False
+
+    # -----------------
+    # Validation hooks
+    # -----------------
+    def __post_init__(self):
         if self.K <= 0:
-            raise ValueError ("EpisodeConfig.K must be postive")
+            raise ValueError("EpisodeConfig.K must be positive")
         if self.target_picks <= 0:
             raise ValueError("EpisodeConfig.target_picks must be positive")
         if self.int_scale <= 0:
             raise ValueError("EpisodeConfig.int_scale must be positive")
         if self.max_steps <= 0:
-            raise ValueError("EpisodeConfig.max_steps must be postive")
+            raise ValueError("EpisodeConfig.max_steps must be positive")
         if self.cache_size < 0:
             raise ValueError("EpisodeConfig.cache_size must be non-negative")
         if self.budget_bucket <= 0:
             raise ValueError("EpisodeConfig.budget_bucket must be positive")
         if self.num_frontier_weights <= 0:
             raise ValueError("EpisodeConfig.num_frontier_weights must be positive")
-        
+        if self.tau_strata < 1:
+            raise ValueError("EpisodeConfig.tau_strata must be >= 1")
+        if not (0.0 < self.tau_edge_eps < 0.1):
+            raise ValueError("EpisodeConfig.tau_edge_eps should be small and in (0, 0.1)")
+
+        # Validate category bins: inside (0,1), non-empty, non-overlapping, increasing
+        if not self.category_bins:
+            raise ValueError("EpisodeConfig.category_bins must contain at least one bin")
+        # Basic shape & range checks
+        cleaned = []
+        for name, bounds in self.category_bins:
+            if not isinstance(bounds, (tuple, list)) or len(bounds) != 2:
+                raise ValueError(f"Bin '{name}' must be a pair (lo, hi)")
+            lo, hi = float(bounds[0]), float(bounds[1])
+            if not (0.0 < lo < hi < 1.0):
+                raise ValueError(f"Bin '{name}' bounds must satisfy 0 < lo < hi < 1; got {bounds}")
+            # apply epsilon edge avoidance (logical only; env will clamp when sampling τ)
+            lo_eps = lo + self.tau_edge_eps
+            hi_eps = hi - self.tau_edge_eps
+            if not (lo_eps < hi_eps):
+                raise ValueError(f"Bin '{name}' too narrow after epsilon edges; increase range or decrease tau_edge_eps")
+            cleaned.append((name, (lo, hi)))
+        # Check non-overlap when ordered by lo
+        sorted_bins = sorted(cleaned, key=lambda x: x[1][0])
+        for i in range(len(sorted_bins) - 1):
+            _, (lo_i, hi_i) = sorted_bins[i]
+            _, (lo_j, hi_j) = sorted_bins[i + 1]
+            if not (hi_i <= lo_j):  # disallow overlap
+                raise ValueError(f"Bins '{sorted_bins[i][0]}' and '{sorted_bins[i+1][0]}' overlap: {(lo_i,hi_i)} vs {(lo_j,hi_j)}")
+
+    # -----------------
+    # Legacy budgeting
+    # -----------------
     def derive_budget_int(self, expected_cost_float: float) -> int:
         """
-        Compute integerized episode budget from expected per-item cost.
+        Legacy path: compute integerized episode budget from expected per-item cost.
 
-        Formula:
-            budget = round(int_scale * budget_multiplier * expected_cost * target_picks)
+        budget_int = round(int_scale * budget_multiplier * expected_cost * target_picks)
+
+        Only used if `use_expected_budget=True`. Recommended path is capacity from realized mass:
+            W = τ * sum_i w_i   (handled in env.reset()).
         """
         if expected_cost_float <= 0.0:
             raise ValueError("expected_cost_float must be positive")
         budget = round(self.int_scale * self.budget_multiplier * expected_cost_float * self.target_picks)
-        # Ensure at least one cheapest item can be bought in typical catalogs;
-        # caller should still validate feasibility at runtime.
         return max(int(budget), 1)
-    
 # -------------------------
 # Episode state (mutable)
 # -------------------------
